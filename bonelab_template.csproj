@@ -1,135 +1,18 @@
-using System;
-using System.Collections.Generic;
-using MelonLoader;
-using BoneLib;
-using BoneLib.BoneMenu;
-using BoneLib.BoneMenu.Elements;
-using LabFusion.Network;
-using LabFusion.Representation;
-using TMPro;
-using UnityEngine;
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>FusionStatsNametags</AssemblyName>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
 
-[assembly: MelonInfo(typeof(FusionStatsNametags.MainClass), "Fusion Stats Nametags", "1.1.0", "YourName")]
-[assembly: MelonGame("Stress Level Zero", "BONELAB")]
-
-namespace FusionStatsNametags
-{
-    public class MainClass : MelonMod
-    {
-        public static bool IsEnabled = true;
-        private static MenuCategory _menuCat;
-        private static readonly Dictionary<byte, TextMeshPro> ActiveNametags = new Dictionary<byte, TextMeshPro>();
-
-        public override void OnInitializeMelon()
-        {
-            SetupBoneMenu();
-            PlayerIdManager.OnPlayerIdSubscribed += OnPlayerJoined;
-            PlayerIdManager.OnPlayerIdUnsubscribed += OnPlayerLeft;
-        }
-
-        private void SetupBoneMenu()
-        {
-            _menuCat = MenuManager.CreateCategory("Stats Nametags", Color.cyan);
-            _menuCat.CreateBoolElement("Enable Overhead Stats", Color.white, IsEnabled, (val) =>
-            {
-                IsEnabled = val;
-                if (!IsEnabled) ClearAllNametags();
-            });
-        }
-
-        private void OnPlayerJoined(PlayerId playerId)
-        {
-            if (playerId.IsMe) return;
-            MelonCoroutines.Start(CreateNametagCoroutine(playerId));
-        }
-
-        private System.Collections.IEnumerator CreateNametagCoroutine(PlayerId playerId)
-        {
-            yield return new WaitForSeconds(1.5f);
-
-            if (!PlayerRepManager.TryGetPlayerRep(playerId, out var playerRep) || playerRep.RigManager == null)
-                yield break;
-
-            Transform headTransform = playerRep.RigManager.physicsRig.m_head;
-            if (headTransform == null) yield break;
-
-            GameObject textObj = new GameObject($"StatsUI_{playerId.SmallId}");
-            textObj.transform.SetParent(headTransform, false);
-            textObj.transform.localPosition = new Vector3(0, 0.5f, 0); // Raised slightly higher (50cm) to fit extra stat lines
-
-            TextMeshPro tmPro = textObj.AddComponent<TextMeshPro>();
-            tmPro.alignment = TextAlignmentOptions.Center;
-            tmPro.fontSize = 2.0f; // Sized down text slightly for clean multi-line display
-            tmPro.color = Color.white;
-            tmPro.text = "Loading player stats...";
-
-            ActiveNametags[playerId.SmallId] = tmPro;
-        }
-
-        private void OnPlayerLeft(PlayerId playerId)
-        {
-            if (ActiveNametags.ContainsKey(playerId.SmallId))
-            {
-                if (ActiveNametags[playerId.SmallId] != null)
-                {
-                    GameObject.Destroy(ActiveNametags[playerId.SmallId].gameObject);
-                }
-                ActiveNametags.Remove(playerId.SmallId);
-            }
-        }
-
-        public override void OnUpdate()
-        {
-            if (!IsEnabled || ActiveNametags.Count == 0) return;
-
-            Transform activeCam = BoneLib.Player.playerHead;
-            if (activeCam == null) return;
-
-            foreach (var kvp in ActiveNametags)
-            {
-                byte smallId = kvp.Key;
-                TextMeshPro tmPro = kvp.Value;
-
-                if (tmPro == null) continue;
-
-                if (PlayerIdManager.TryGetPlayerId(smallId, out var playerId) && 
-                    PlayerRepManager.TryGetPlayerRep(playerId, out var playerRep) && playerRep.RigManager != null)
-                {
-                    // Billboard script: Make text face your VR eyes
-                    tmPro.transform.LookAt(activeCam.position);
-                    tmPro.transform.Rotate(0, 180, 0);
-
-                    // 1. Basic Identity & Health Data
-                    string username = playerRep.IsValidated ? playerRep.PlayerId.Username : "Connecting...";
-                    float health = playerRep.RigManager.health._health;
-                    
-                    // 2. Extract Active Avatar Properties Natively
-                    var activeAvatar = playerRep.RigManager.avatar;
-                    string avatarName = activeAvatar != null ? activeAvatar.name.Replace("(Clone)", "").Trim() : "Unknown";
-
-                    // 3. Extract Real-Time Avatar Multiplier Stats
-                    float speedMult = activeAvatar != null ? activeAvatar._speedStat : 1.0f;
-                    float agilityMult = activeAvatar != null ? activeAvatar._agilityStat : 1.0f;
-                    float strengthUpper = activeAvatar != null ? activeAvatar._strengthUpperStat : 1.0f;
-
-                    // Compile and format the dynamic stats block using rich text tags
-                    tmPro.text = $"<b><color=#00FFFF>{username}</color></b>\n" +
-                                 $"<size=80%><color=#FFA500>Avatar: {avatarName}</color></size>\n" +
-                                 $"<color=red>HP: {Mathf.CeilToInt(health)}</color> | " +
-                                 $"<color=#32CD32>SPD: {speedMult:F1}x</color>\n" +
-                                 $"<color=#1E90FF>AGL: {agilityMult:F1}x</color> | " +
-                                 $"<color=#FFD700>STR: {strengthUpper:F1}x</color>";
-                }
-            }
-        }
-
-        private void ClearAllNametags()
-        {
-            foreach (var tmPro in ActiveNametags.Values)
-            {
-                if (tmPro != null) GameObject.Destroy(tmPro.gameObject);
-            }
-            ActiveNametags.Clear();
-        }
-    }
-}
+  <ItemGroup>
+    <Reference Include="MelonLoader"><HintPath>References\MelonLoader.dll</HintPath></Reference>
+    <Reference Include="BoneLib"><HintPath>References\BoneLib.dll</HintPath></Reference>
+    <Reference Include="LabFusion"><HintPath>References\LabFusion.dll</HintPath></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>References\Unity.TextMeshPro.dll</HintPath></Reference>
+    <Reference Include="UnityEngine"><HintPath>References\UnityEngine.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>References\UnityEngine.CoreModule.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
