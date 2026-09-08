@@ -12,17 +12,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0.x'
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
     - name: Compile Mod
-      run: |
-        dotnet csc /target:library /out:FusionStatsNametags.dll /reference:References\BoneLib.dll /reference:References\Unity.TextMeshPro.dll /reference:References\MelonLoader.dll /reference:References\LabFusion.dll /reference:References\UnityEngine.dll /reference:References\UnityEngine.CoreModule.dll Main.cs
+      run: msbuild bonelab_template.csproj /p:Configuration=Release
 
     - name: Upload Finished Mod
       uses: actions/upload-artifact@v4
       with:
         name: FusionStatsNametags
-        path: FusionStatsNametags.dll
+        path: '**/FusionStatsNametags.dll'
