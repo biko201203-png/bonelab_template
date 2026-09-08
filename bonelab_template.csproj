@@ -42,3 +42,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
+  <ItemGroup>
+    <Reference Include="LabFusion">
+      <HintPath>References\LabFusion.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
