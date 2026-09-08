@@ -12,12 +12,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
 
     - name: Compile Mod
       run: |
-        csc /target:library /out:FusionStatsNametags.dll /reference:References\BoneLib.dll /reference:References\Unity.TextMeshPro.dll /reference:References\MelonLoader.dll /reference:References\LabFusion.dll /reference:References\UnityEngine.dll /reference:References\UnityEngine.CoreModule.dll Main.cs
+        dotnet csc /target:library /out:FusionStatsNametags.dll /reference:References\BoneLib.dll /reference:References\Unity.TextMeshPro.dll /reference:References\MelonLoader.dll /reference:References\LabFusion.dll /reference:References\UnityEngine.dll /reference:References\UnityEngine.CoreModule.dll Main.cs
 
     - name: Upload Finished Mod
       uses: actions/upload-artifact@v4
