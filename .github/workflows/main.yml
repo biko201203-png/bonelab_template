@@ -15,17 +15,12 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Setup NuGet
-      uses: nuget/setup-nuget@v2
+    - name: Compile Mod
+      run: |
+        csc /target:library /out:FusionStatsNametags.dll /reference:References\BoneLib.dll /reference:References\Unity.TextMeshPro.dll /reference:References\MelonLoader.dll /reference:References\LabFusion.dll /reference:References\UnityEngine.dll /reference:References\UnityEngine.CoreModule.dll Main.cs
 
-    - name: Restore NuGet Packages
-      run: nuget restore bonelab_template.sln
-
-    - name: Build Solution
-      run: msbuild bonelab_template.sln /p:Configuration=Release
-
-    - name: Upload Artifact
+    - name: Upload Finished Mod
       uses: actions/upload-artifact@v4
       with:
         name: FusionStatsNametags
-        path: '**/bin/Release/**/*.dll'
+        path: FusionStatsNametags.dll
